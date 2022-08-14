@@ -111,7 +111,10 @@ function createUserWithEmailAndPassword($email,$username,$password) {
                 $imageDestination = __DIR__.'/images/'.$imageNameNew;
                 // check dir or creater
                 if(!file_exists('./images')){
-                    mkdir('./images');
+                    $oldmask = umask(0);
+                    // read and write everybody to allow user to upload images
+                    mkdir('./images',0777);
+                    umask($oldmask);
                 }
                 // compress image and get size
                 if(!compressImage($imageTmpName,$imageDestination)) {
