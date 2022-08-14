@@ -1,0 +1,72 @@
+# This file must be put in the root domain to work
+# ErrorDocument 404 /error_pages/page_not_found.php
+# ErrorDocument 403 /error_pages/page_forbidden.php
+# DENY SERVER FROM ACCESSING PRIVATE FILES
+<FilesMatch "\.(htaccess|ini)$">
+  Order allow,deny
+  Deny from all
+</FilesMatch>
+# HIDE ERRORS ON USER INTERFACE
+# php_flag display_errors Off
+# PREVENT USER FROM VIEWING DIRECTORY
+Options -Indexes
+# PREVENT APACHE FROM IMPLICIT GUESS OF FILENAME
+Options -MultiViews
+# ALLOW APACHE TO FOLLOW LINKS TO DIRECTORY
+Options +FollowSymLinks
+# SECURE SESSION COOKIE
+# php_value session.cookie_httponly 1
+# php_value session.cookie_secure 1
+# php_value session.use_only_cookie 1
+<IfModule mod_rewrite.c>
+  # TURN ON URL REWRITING
+  RewriteEngine on
+  RewriteBase /
+#   <IfModule ssl_module>
+#     # DIRECT USER FROM HTTP TO HTTPS
+#     RewriteCond %{HTTPS} off
+#     RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,NC,R=301]
+#   </IfModule>
+  # STRIP OFF THE PHP EXTENSION
+#   RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /([^?\ ]+)\.php
+#   RewriteRule ^/?(.*)\.php$ /$1 [L,NC,R=301]
+#   # MATCH URL PATH TO THEIR PHP FILENAME
+#   RewriteCond %{REQUEST_FILENAME}\.php -f
+#   RewriteRule ^/?(.*[^/])$ /$1.php [L,NC]
+  # GENERATE SITEMAP ON THE FLY
+  RewriteRule ^sitemap\.xml$ /seo/sitemap.php [L,NC]
+  # GENERATE ROBOTS TXT ON THE FLY
+  RewriteRule ^robots\.txt$ /seo/robots.php [L,NC]
+  # HANDLES SHORTLINK URL WITH ACTUAL CONTROLLER
+  RewriteRule ^/?r/(.*) /redirect/r.php?r=$1 [L,NC]
+  # PREVENT USER FROM VIEWING INCLUDES FOLDER
+  RewriteRule ^/?includes/.*$ _ [L,NC]
+  # PREVENT USER FROM VIEWING PARTIALS FOLDER
+  RewriteRule ^/?partials/.*$ _ [L,NC]
+  
+</IfModule>
+<IfModule mod_deflate.c>
+  # APPLY ZIPPING TO PLAIN FILES
+  <FilesMatch "\.(php|css|js|json|ttf|eof|svg|woff|woff2|xml)$">
+    SetOutputFilter DEFLATE
+  </FilesMatch>
+</IfModule>
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header unset X-Powered-By
+  # SET EXPIRE HEADER TO FILE THAT DO NOT END WITH PHP EXTENSION
+  <FilesMatch ".*(?<!\.php)$">
+    Header set Cache-Control "max-age=31536000"
+    # PREVENT CROSS DOMAIN FROM USING THE FILES ON THEIR SITE i.e hotlinking
+    #Header set Cross-Origin-Resource-Policy "same-origin"
+  </FilesMatch>
+  # SET HEADERS ON ALL PHP FILES EXCEPT SITEMAP PHP AND ROBOTS PHP FILES
+  <FilesMatch ".*\.php(?<!sitemap\.php|robots\.php)$">
+    Header set Cache-Control "no-store, no-cache, must-revalidate"
+    # SECURITY HEADERS
+    Header set X-Frame-Options "deny"
+    Header set X-XSS-Protection "1;mode=block"
+    Header set Strict-Transport-Security "max-age=31536000;includeSubDomains"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+  </FilesMatch>
+</IfModule>
