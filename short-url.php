@@ -2,6 +2,8 @@
 require_once "./db.php";
 require_once "./helpers.php";
 header('Content-Type:application/json');
+
+
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
   http_response_code(405);
   die(json_encode([
@@ -20,13 +22,13 @@ if (isset($_GET['url']) && filter_var($_GET['url'], FILTER_VALIDATE_URL)) {
     $stmt = $GLOBALS['conn']->prepare('INSERT INTO linkshortener(actualLink,shortLink) VALUES (?,?)');
     $stmt->execute([$_GET['url'], $unique]);
     die(json_encode([
-      'msg' => "https://{$shortLinkRewriteFromHtacess}{$unique}",
+      'msg' => "{$requestScheme}://{$shortLinkRewriteFromHtacess}{$unique}",
       'success' => true
     ]));
   } else {
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     die(json_encode([
-      'msg' => "https://{$shortLinkRewriteFromHtacess}{$result['shortLink']}",
+      'msg' => "{$requestScheme}://{$shortLinkRewriteFromHtacess}{$result['shortLink']}",
       'success' => true
     ]));
   }

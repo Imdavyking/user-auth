@@ -4,7 +4,6 @@ $username = "root";
 $password = "";
 $dbname = "user";
 $GLOBALS['playerRecordsTable'] = "userRecords";
-$GLOBALS['server_url'] = "http://{$_SERVER['HTTP_HOST']}";
 $GLOBALS['company_domain'] = "ecla.network";
 $GLOBALS['email_sender'] = "info@ecla.network";
 $GLOBALS['access_token_minutes'] = 10;

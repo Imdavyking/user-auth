@@ -2,6 +2,17 @@
 date_default_timezone_set("Africa/Lagos");
 require_once $_SERVER['DOCUMENT_ROOT']."/ecla/user-auth/db.php";
 error_reporting(0);  // hide notices
+function requestIsHttps(){
+    return isset($_SERVER['HTTPS']) &&
+     ($_SERVER['HTTPS'] == 'on' || $_SERVER['HTTPS'] == 1) ||
+     isset($_SERVER['HTTP_X_FORWARDED_PROTO']) &&
+     $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https';
+}
+
+   
+$requestScheme = requestIsHttps() ? 'https': 'http';
+$GLOBALS['server_url'] = "{$requestScheme}://{$_SERVER['HTTP_HOST']}";
+
 function checkIfEmailExists($email){
     $stmt = $GLOBALS['conn']->prepare("SELECT * FROM {$GLOBALS['playerRecordsTable']} WHERE email = ? LIMIT 1");
     $stmt->execute([$email]);
@@ -453,4 +464,6 @@ function getActualLink( $shortLink ) {
       'msg' => $actualLink
     ];
   }
+  
+
   
