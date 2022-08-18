@@ -2,6 +2,7 @@
 require_once "../nft-market-place-db.php";
 
 header('content-type: application/json');
+header('Access-Control-Allow-Origin: *');
 
 $page = 1;
 // get all listing form itemListed table 10 per page pdo
