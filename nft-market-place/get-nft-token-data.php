@@ -20,7 +20,7 @@ if(!isset($_GET['token_id']) || !filter_var($_GET['token_id'],FILTER_VALIDATE_IN
 }
 
 die(json_encode([
-    'image' => '',
+    'image' => 'https://dex.ecla.network/assets/liquidgrad.png',
     'name' => "{$_GET['token_id']} name",
     'description' => "{$_GET['token_id']} description",
 ]));
