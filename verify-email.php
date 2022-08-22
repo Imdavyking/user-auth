@@ -11,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     ]));
 }
 
-if(!isset($_GET['verify_code']) ){
+if(!isset($_POST['verify_code']) ){
     http_response_code(400);
     die(json_encode([
         'msg' => 'verification code not given',
@@ -19,7 +19,7 @@ if(!isset($_GET['verify_code']) ){
     ]));
 }
 
-if(!isset($_GET['email']) ){
+if(!isset($_POST['email']) ){
     http_response_code(400);
     die(json_encode([
         'success' => false,
@@ -27,6 +27,6 @@ if(!isset($_GET['email']) ){
     ]));
 }
 
-die(json_encode(verify_email($_POST['verify_code'],$_POST['verify_code'])));
+die(json_encode(verify_email($_POST['verify_code'],$_POST['email'])));
 
 ?>
