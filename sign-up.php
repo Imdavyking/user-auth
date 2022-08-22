@@ -48,12 +48,7 @@ if(!isset($_FILES['image'])){
 }
 
 
-$signUpResult = createUserWithEmailAndPassword($_POST['email'],$_POST['username'],$_POST['password']);
-
-die(json_encode([
-    'success' => $signUpResult['success'],
-    'msg' => $signUpResult['msg']
-]));
+die(json_encode(createUserWithEmailAndPassword($_POST['email'],$_POST['username'],$_POST['password'])));
 
 
 

@@ -189,6 +189,8 @@ function loginUserWithEmailAndPassword($email,$password){
                 ];
             }
 
+            die(json_encode( sendEmailVerification($email)))
+;
             $sendEmailVerificationCode = sendEmailVerification($email);
 
             if(!$verified && $sendEmailVerificationCode['success']){
