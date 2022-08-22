@@ -35,7 +35,9 @@ function checkIfVerified($email){
 }
 
 function getRandomCode(){
-    return bin2hex(random_bytes(4));
+    // bin2hex(random_bytes(4)) former hex code
+    $digits = 4;
+    return str_pad(rand(0, pow(10, $digits)-1), $digits, '0', STR_PAD_LEFT);
 }
 
 
