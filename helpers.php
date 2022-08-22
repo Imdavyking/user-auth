@@ -11,7 +11,6 @@ function requestIsHttps(){
 
    
 $requestScheme = requestIsHttps() ? 'https': 'http';
-$emailExpirationInMinutes = 10;
 $GLOBALS['server_url'] = "{$requestScheme}://{$_SERVER['HTTP_HOST']}";
 
 function checkIfEmailExists($email){
@@ -228,9 +227,9 @@ function sendForgetPasswordEmailWithRandomCode($email){
     }
     $email = $result['email'];
     $subject = "Password Reset";
-    $tenMinutesFromNow = date('Y-m-d H:i:s',strtotime("+$emailExpirationInMinutes minutes"));
+    $tenMinutesFromNow = date('Y-m-d H:i:s',strtotime("+{$GLOBALS['email_code_minutes']} minutes"));
 
-    $message = "Your Password Reset Code is $randomCode<br><b>This code will expire in $emailExpirationInMinutes minutes</b>";
+    $message = "Your Password Reset Code is $randomCode<br><b>This code will expire in {$GLOBALS['email_code_minutes']} minutes</b>";
     $headers  = "From: {$GLOBALS['company_domain']}\r\n"; // sender.co
     $headers .= "Reply-To: {$GLOBALS['email_sender']}\r\n"; // info@sender.co
     $headers .= "CC: {$GLOBALS['email_sender']}\r\n"; // info@sender.co
@@ -295,22 +294,24 @@ function sendEmailVerification($email){
         return ['success' => false,'msg' => 'email already verified'];
     }
     
-    $tenMinutesFromNow = date('Y-m-d H:i:s',strtotime("+$emailExpirationInMinutes minutes"));
+    $tenMinutesFromNow = date('Y-m-d H:i:s',strtotime("+{$GLOBALS['email_code_minutes']} minutes"));
     $verifyCode = getRandomCode();
     $stmt = $GLOBALS['conn']->prepare("UPDATE {$GLOBALS['playerRecordsTable']} SET `verify-code` = ?, `verifyCodeExpiryDate` = ? WHERE email = ?");
    
     $stmt->execute([$verifyCode,$tenMinutesFromNow,$email]);
     
     $subject = 'Email Verification';
-    $message = "<p>Your verification code is <b>{$verifyCode}</b><br />Please click the link below to verify your email address, the code will expire in $emailExpirationInMinutes minutes.</p>";
-    $message .= '<a href="'.$GLOBALS['server_url'].'/ecla/user-auth/verify-email.php?verify_code='.$verifyCode.'">Verify Email</a>';
+
+    $message = "<p>Your verification code is <b>{$verifyCode}</b><br /> the code will expire in {$GLOBALS['email_code_minutes']} minutes.</p>";
+    
     $headers  = "From: {$GLOBALS['company_domain']}\r\n"; // sender.co
     $headers .= "Reply-To: {$GLOBALS['email_sender']}\r\n"; // info@sender.co
     $headers .= "CC: {$GLOBALS['email_sender']}\r\n"; // info@sender.co
     $headers .= "MIME-Version: 1.0\r\n";
     $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+
     if(mail($email,$subject,$message,$headers)){
-        return ['success' => true,'msg' => 'email sent', 'expiration' => $emailExpirationInMinutes];
+        return ['success' => true,'msg' => 'email sent', 'expiration' => $GLOBALS['email_code_minutes']];
     }
     return ['success' => false,'msg' => 'email not sent'];
 
