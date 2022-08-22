@@ -26,6 +26,6 @@ $sendEmailVerificationResult = sendEmailVerification($_POST['email']);
 die(json_encode([
     'success' => $sendEmailVerificationResult['success'],
     'msg' => $sendEmailVerificationResult['msg'],
-    'expiration' => $sendEmailVerificationResult['expiration']
+    'expiration' => $GLOBALS['email_code_minutes']
 ]));
 

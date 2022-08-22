@@ -29,8 +29,4 @@ if(!isset($_POST['password']) ){
     ]));
 }
 
-$loginResult = loginUserWithEmailAndPassword($_POST['email'],$_POST['password']);
-die(json_encode([
-    'success' => $loginResult['success'],
-    'msg' =>  $loginResult['msg']
-]));
+die(json_encode(loginUserWithEmailAndPassword($_POST['email'],$_POST['password'])));

@@ -134,12 +134,11 @@ function createUserWithEmailAndPassword($email,$username,$password) {
                 }
                 $stmt = $GLOBALS['conn']->prepare("INSERT INTO {$GLOBALS['playerRecordsTable']} (email,username,password,image) VALUES (?,?,?,?)");
                 $stmt->execute([$email, $username,password_hash($password,PASSWORD_BCRYPT),$imageNameNew]);
-                $sendEmailVerificationCode = sendEmailVerification($email);
-                if(sendEmailVerificationCode['success']){
+                if(sendEmailVerification($email)['success']){
                     return [
                         'success' => true,
                         'msg' => 'user created, check your email to verify',
-                        'expiration' => sendEmailVerificationCode['expiration']
+                        'expiration' => $GLOBALS['email_code_minutes']
                     ];
                 }
                 return [
@@ -189,15 +188,11 @@ function loginUserWithEmailAndPassword($email,$password){
                 ];
             }
 
-            die(json_encode( sendEmailVerification($email)))
-;
-            $sendEmailVerificationCode = sendEmailVerification($email);
-
-            if(!$verified && $sendEmailVerificationCode['success']){
+            if(!$verified && sendEmailVerification($email)['success']){
                 return [
                     'success' => false,
                     'msg' => 'check your email to verify',
-                    'expiration' => $sendEmailVerificationCode['expiration']
+                    'expiration' => $GLOBALS['email_code_minutes']
                 ];
             }
 
@@ -313,7 +308,7 @@ function sendEmailVerification($email){
     $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
 
     if(mail($email,$subject,$message,$headers)){
-        return ['success' => true,'msg' => 'email sent', 'expiration' => $GLOBALS['email_code_minutes']];
+        return ['success' => true,'msg' => 'email sent'];
     }
     return ['success' => false,'msg' => 'email not sent'];
 
