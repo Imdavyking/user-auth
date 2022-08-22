@@ -11,6 +11,7 @@ function requestIsHttps(){
 
    
 $requestScheme = requestIsHttps() ? 'https': 'http';
+$emailExpirationInMinutes = 10;
 $GLOBALS['server_url'] = "{$requestScheme}://{$_SERVER['HTTP_HOST']}";
 
 function checkIfEmailExists($email){
@@ -134,10 +135,12 @@ function createUserWithEmailAndPassword($email,$username,$password) {
                 }
                 $stmt = $GLOBALS['conn']->prepare("INSERT INTO {$GLOBALS['playerRecordsTable']} (email,username,password,image) VALUES (?,?,?,?)");
                 $stmt->execute([$email, $username,password_hash($password,PASSWORD_BCRYPT),$imageNameNew]);
-                if(sendEmailVerification($email)['success']){
+                $sendEmailVerificationCode = sendEmailVerification($email);
+                if(sendEmailVerificationCode['success']){
                     return [
                         'success' => true,
-                        'msg' => 'user created, check your email to verify'
+                        'msg' => 'user created, check your email to verify',
+                        'expiration' => sendEmailVerificationCode['expiration']
                     ];
                 }
                 return [
@@ -187,10 +190,13 @@ function loginUserWithEmailAndPassword($email,$password){
                 ];
             }
 
-            if(!$verified && sendEmailVerification($email)['success']){
+            $sendEmailVerificationCode = sendEmailVerification($email);
+
+            if(!$verified && $sendEmailVerificationCode['success']){
                 return [
                     'success' => false,
-                    'msg' => 'check your email to verify'
+                    'msg' => 'check your email to verify',
+                    'expiration' => $sendEmailVerificationCode['expiration']
                 ];
             }
 
@@ -222,9 +228,9 @@ function sendForgetPasswordEmailWithRandomCode($email){
     }
     $email = $result['email'];
     $subject = "Password Reset";
-    $tenMinutesFromNow = date('Y-m-d H:i:s',strtotime('+10 minutes'));
+    $tenMinutesFromNow = date('Y-m-d H:i:s',strtotime("+$emailExpirationInMinutes minutes"));
 
-    $message = "Your Password Reset Code is $randomCode<br><b>This code will expire in 10 minutes</b>";
+    $message = "Your Password Reset Code is $randomCode<br><b>This code will expire in $emailExpirationInMinutes minutes</b>";
     $headers  = "From: {$GLOBALS['company_domain']}\r\n"; // sender.co
     $headers .= "Reply-To: {$GLOBALS['email_sender']}\r\n"; // info@sender.co
     $headers .= "CC: {$GLOBALS['email_sender']}\r\n"; // info@sender.co
@@ -289,14 +295,14 @@ function sendEmailVerification($email){
         return ['success' => false,'msg' => 'email already verified'];
     }
     
-    $tenMinutesFromNow = date('Y-m-d H:i:s',strtotime('+10 minutes'));
+    $tenMinutesFromNow = date('Y-m-d H:i:s',strtotime("+$emailExpirationInMinutes minutes"));
     $verifyCode = getRandomCode();
     $stmt = $GLOBALS['conn']->prepare("UPDATE {$GLOBALS['playerRecordsTable']} SET `verify-code` = ?, `verifyCodeExpiryDate` = ? WHERE email = ?");
    
     $stmt->execute([$verifyCode,$tenMinutesFromNow,$email]);
     
     $subject = 'Email Verification';
-    $message = "<p>Your verification code is <b>{$verifyCode}</b><br />Please click the link below to verify your email address, the code will expire in ten minutes.</p>";
+    $message = "<p>Your verification code is <b>{$verifyCode}</b><br />Please click the link below to verify your email address, the code will expire in $emailExpirationInMinutes minutes.</p>";
     $message .= '<a href="'.$GLOBALS['server_url'].'/ecla/user-auth/verify-email.php?verify_code='.$verifyCode.'">Verify Email</a>';
     $headers  = "From: {$GLOBALS['company_domain']}\r\n"; // sender.co
     $headers .= "Reply-To: {$GLOBALS['email_sender']}\r\n"; // info@sender.co
@@ -304,15 +310,15 @@ function sendEmailVerification($email){
     $headers .= "MIME-Version: 1.0\r\n";
     $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
     if(mail($email,$subject,$message,$headers)){
-        return ['success' => true,'msg' => 'email sent'];
+        return ['success' => true,'msg' => 'email sent', 'expiration' => $emailExpirationInMinutes];
     }
     return ['success' => false,'msg' => 'email not sent'];
 
 }
 
-function verify_email($verify_code){
-    $stmt = $GLOBALS['conn']->prepare("SELECT * FROM {$GLOBALS['playerRecordsTable']} WHERE `verify-code` = ?");
-    $stmt->execute([$verify_code]);
+function verify_email($verify_code,$email){
+    $stmt = $GLOBALS['conn']->prepare("SELECT * FROM {$GLOBALS['playerRecordsTable']} WHERE `verify-code` = ? && email = ?");
+    $stmt->execute([$verify_code,$email]);
     $result = $stmt->fetch();
 
     if(!$result){
